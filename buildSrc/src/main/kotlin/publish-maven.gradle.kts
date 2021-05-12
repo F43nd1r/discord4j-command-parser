@@ -61,7 +61,7 @@ publishing {
         mavenLocal()
         maven {
             name = "GithubPackages"
-            url = uri("https://maven.pkg.github.com/F43nd1r/autodsl-ksp")
+            url = uri("https://maven.pkg.github.com/F43nd1r/discord4j-command-parser")
             credentials {
                 username = project.findProperty("githubUser") as? String ?: System.getenv("GITHUB_USER")
                 password = project.findProperty("githubPackageKey") as? String ?: System.getenv("GITHUB_TOKEN")

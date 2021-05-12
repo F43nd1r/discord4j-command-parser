@@ -72,7 +72,7 @@ class Parameter(private val parameter: KSValueParameter, private val index: Int)
                 typeName.nonnull == INT -> "asLong().toInt()"
                 typeName.nonnull == BOOLEAN -> "asBoolean()"
                 converter != null -> CodeBlock.of("asString().let·{ %T().fromString(it) }", converter.asTypeName())
-                isEnum -> CodeBlock.of("asString().let·{ %T.valueOf(it) }", typeName)
+                isEnum -> CodeBlock.of("asString()?.let·{ %T.valueOf(it) }", typeName.nonnull)
                 else -> "asString()"
             }
         )
