@@ -7,6 +7,7 @@ plugins {
 
 jgitver {
     regexVersionTag = "v([0-9]+(?:\\.[0-9]+){0,2}(?:-[a-zA-Z0-9\\-_]+)?)"
+    nonQualifierBranches = "main"
 }
 
 tasks.register("build") {
