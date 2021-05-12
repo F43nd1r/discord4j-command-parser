@@ -18,9 +18,11 @@ class BasicTest {
             """,
             """
                 import strikt.api.expectThat
-                import strikt.assertions.isNotNull
+                import strikt.assertions.isEqualTo
                 fun test() {
-                    expectThat(SampleParser.buildData()).isNotNull()
+                    expectThat(SampleParser.buildData()) {
+                        get { options().get().size }.isEqualTo(4)
+                    }
                 }
             """
         )
