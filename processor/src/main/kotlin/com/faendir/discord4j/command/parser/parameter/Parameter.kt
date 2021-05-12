@@ -9,7 +9,6 @@ import com.faendir.discord4j.command.parser.findAnnotationProperty
 import com.faendir.discord4j.command.parser.findAnnotationTypeProperty
 import com.faendir.discord4j.command.parser.hasAnnotation
 import com.faendir.discord4j.command.parser.nonnull
-import com.faendir.discord4j.command.parser.toRawType
 import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSValueParameter
@@ -63,18 +62,32 @@ class Parameter(private val parameter: KSValueParameter, private val index: Int)
     }
 
     fun passToConstructor(): CodeBlock = codeBlock {
-        add(
-            "options.first·{ %S == it.name }.value.%L.%L", name.toKebabCase(), when (isRequired) {
-                true -> "get()"
-                false -> "orElse(null)?"
-            },
-            when {
-                typeName.nonnull == INT -> "asLong().toInt()"
-                typeName.nonnull == BOOLEAN -> "asBoolean()"
-                converter != null -> CodeBlock.of("asString().let·{ %T().fromString(it) }", converter.asTypeName())
-                isEnum -> CodeBlock.of("asString()?.let·{ %T.valueOf(it) }", typeName.nonnull)
-                else -> "asString()"
-            }
-        )
+        if (isRequired) {
+            add(
+                "options.first·{ %S == it.name }.value.get().%L", name.toKebabCase(),
+                when {
+                    typeName.nonnull == INT -> "asLong().toInt()"
+                    typeName.nonnull == BOOLEAN -> "asBoolean()"
+                    converter != null -> CodeBlock.of("asString().let·{ %T().fromString(it) }", converter.asTypeName())
+                    isEnum -> CodeBlock.of(
+                        "asString()%L.let·{ %T.valueOf(it) }", "", typeName.nonnull
+                    )
+                    else -> "asString()"
+                }
+            )
+        } else {
+            add(
+                "options.firstOrNull·{ %S == it.name }?.value?.orElse(null)?.?%L", name.toKebabCase(),
+                when {
+                    typeName.nonnull == INT -> "asLong()?.toInt()"
+                    typeName.nonnull == BOOLEAN -> "asBoolean()"
+                    converter != null -> CodeBlock.of("asString().let·{ %T().fromString(it) }", converter.asTypeName())
+                    isEnum -> CodeBlock.of(
+                        "asString()?.let·{ %T.valueOf(it) }", typeName.nonnull
+                    )
+                    else -> "asString()"
+                }
+            )
+        }
     }
 }
