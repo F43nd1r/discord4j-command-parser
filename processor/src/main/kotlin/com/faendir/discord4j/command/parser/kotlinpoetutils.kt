@@ -2,12 +2,24 @@ package com.faendir.discord4j.command.parser
 
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
-import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeReference
-import com.squareup.kotlinpoet.*
+import com.squareup.kotlinpoet.BOOLEAN
+import com.squareup.kotlinpoet.BYTE
+import com.squareup.kotlinpoet.CHAR
+import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.DOUBLE
+import com.squareup.kotlinpoet.FLOAT
+import com.squareup.kotlinpoet.FileSpec
+import com.squareup.kotlinpoet.INT
+import com.squareup.kotlinpoet.LONG
+import com.squareup.kotlinpoet.LambdaTypeName
+import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import com.squareup.kotlinpoet.SHORT
+import com.squareup.kotlinpoet.TypeName
+import com.squareup.kotlinpoet.asClassName
 
 fun KSTypeReference.asTypeName() = resolve().asTypeName()
 
@@ -21,8 +33,9 @@ fun KSType.asTypeName(): TypeName {
 
 fun KSType.asClassName(): ClassName {
     return ClassName(declaration.normalizedPackageName,
-        *generateSequence(declaration.parentDeclaration, ){ it.parentDeclaration }.map { it.simpleName.asString() }.toList().toTypedArray(),
-        declaration.simpleName.asString())
+        *generateSequence(declaration.parentDeclaration) { it.parentDeclaration }.map { it.simpleName.asString() }.toList().toTypedArray(),
+        declaration.simpleName.asString()
+    )
 }
 
 fun FileSpec.writeTo(source: KSFile, codeGenerator: CodeGenerator) {
@@ -44,3 +57,8 @@ fun ClassName.withParserSuffix() = ClassName(packageName, "${simpleNames.joinToS
 fun TypeName.withParserSuffix() = toRawType().withParserSuffix()
 
 fun TypeName.asLambdaReceiver() = LambdaTypeName.get(receiver = this, returnType = Unit::class.asClassName())
+
+private val primitives = listOf(BYTE, SHORT, INT, LONG, FLOAT, DOUBLE, BOOLEAN, CHAR)
+
+val TypeName.isPrimitive: Boolean
+    get() = !isNullable && primitives.contains(this)

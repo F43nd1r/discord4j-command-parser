@@ -3,6 +3,7 @@ package com.faendir.discord4j.command.parser
 import com.faendir.discord4j.command.annotation.ApplicationCommand
 import com.faendir.discord4j.command.annotation.ApplicationCommandConstructor
 import com.faendir.discord4j.command.parser.parameter.Parameter
+import com.faendir.discord4j.command.parser.parameter.ParameterFactory
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.getConstructors
 import com.google.devtools.ksp.isAbstract
@@ -61,7 +62,7 @@ class Generator(
             //defer processing
             return false
         }
-        val parameters = constructor.parameters.mapIndexed { index, parameter -> Parameter(parameter, index) }
+        val parameters = ParameterFactory.createParameters(constructor.parameters, logger)
         val type = clazz.asStarProjectedType().asClassName()
         val subCommand = clazz.findAnnotationProperty(ApplicationCommand::subCommand) ?: false
         val dataType = if (subCommand) ApplicationCommandOptionData::class else ApplicationCommandRequest::class

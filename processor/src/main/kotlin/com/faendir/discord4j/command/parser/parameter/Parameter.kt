@@ -1,93 +1,61 @@
 package com.faendir.discord4j.command.parser.parameter
 
-import com.faendir.discord4j.command.annotation.Converter
 import com.faendir.discord4j.command.annotation.Description
 import com.faendir.discord4j.command.annotation.Name
 import com.faendir.discord4j.command.annotation.Required
+import com.faendir.discord4j.command.parser.asClassName
 import com.faendir.discord4j.command.parser.asTypeName
 import com.faendir.discord4j.command.parser.findAnnotationProperty
-import com.faendir.discord4j.command.parser.findAnnotationTypeProperty
 import com.faendir.discord4j.command.parser.hasAnnotation
-import com.faendir.discord4j.command.parser.nonnull
-import com.google.devtools.ksp.symbol.ClassKind
+import com.faendir.discord4j.command.parser.hasAnnotationWithName
+import com.faendir.discord4j.command.parser.isPrimitive
+import com.google.devtools.ksp.processing.KSBuiltIns
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSValueParameter
-import com.squareup.kotlinpoet.BOOLEAN
+import com.google.devtools.ksp.symbol.Origin
 import com.squareup.kotlinpoet.CodeBlock
-import com.squareup.kotlinpoet.INT
-import discord4j.discordjson.json.ApplicationCommandOptionChoiceData
 import discord4j.discordjson.json.ApplicationCommandOptionData
 import discord4j.rest.util.ApplicationCommandOptionType
+import io.github.enjoydambience.kotlinbard.CodeBlockBuilder
 import io.github.enjoydambience.kotlinbard.codeBlock
 import net.pearx.kasechange.toKebabCase
 
-class Parameter(private val parameter: KSValueParameter, private val index: Int) {
-    private val type = parameter.type.resolve()
-    private val typeDeclaration = type.declaration as KSClassDeclaration
-    private val isEnum = typeDeclaration.classKind == ClassKind.ENUM_CLASS
-    private val typeName = type.asTypeName()
-    private val name = parameter.name?.asString() ?: "var$index"
-    private val converter = parameter.findAnnotationTypeProperty(Converter::value)
-    val isRequired = !typeName.isNullable || parameter.hasAnnotation<Required>()
+abstract class Parameter(private val parameter: KSValueParameter, private val index: Int) {
+    val type = parameter.type.resolve()
+    val typeName = type.asTypeName()
+    val isRequired : Boolean = when (parameter.origin) {
+        Origin.KOTLIN, Origin.SYNTHETIC -> !typeName.isNullable || parameter.hasAnnotation<Required>()
+        Origin.JAVA, Origin.CLASS -> typeName.isPrimitive || parameter.hasAnnotationWithName("Nonnull", "NonNull", "NotNull", "Required") && !parameter.hasAnnotationWithName("Nullable")
+        else -> true
+    }
+
+    abstract val optionType: ApplicationCommandOptionType
 
     fun buildData(): CodeBlock = codeBlock {
         add("%T.builder()\n", ApplicationCommandOptionData::class)
-        val name = parameter.findAnnotationProperty(Name::value) ?: name.toKebabCase()
+        val name = parameter.findAnnotationProperty(Name::value) ?: (parameter.name?.asString() ?: "var$index").toKebabCase()
         indent()
         add(".name(%S)\n", name)
         add(".description(%S)\n", parameter.findAnnotationProperty(Description::value) ?: name)
         if (isRequired) {
             add(".required(true)\n")
         }
-        add(
-            ".type(%T.%L.value)\n", ApplicationCommandOptionType::class, when (typeName.nonnull) {
-                INT -> ApplicationCommandOptionType.INTEGER
-                BOOLEAN -> ApplicationCommandOptionType.BOOLEAN
-                else -> ApplicationCommandOptionType.STRING
-            }.name
-        )
-        if (isEnum) {
-            for (enumValue in typeDeclaration.declarations.filterIsInstance<KSClassDeclaration>()) {
-                val value = enumValue.simpleName.asString()
-                add(
-                    ".addChoice(%T.builder().name(%S).value(%S).build())\n",
-                    ApplicationCommandOptionChoiceData::class,
-                    enumValue.findAnnotationProperty(Name::value) ?: value.toKebabCase(),
-                    value
-                )
-            }
-        }
+        add(".type(%T.%L.value)\n", ApplicationCommandOptionType::class, optionType.name)
+        modifyDataBuilder()
         add(".build()")
         unindent()
     }
 
+    open fun CodeBlockBuilder.modifyDataBuilder() {
+    }
+
+    abstract fun convertValue(): CodeBlock
+
     fun passToConstructor(): CodeBlock = codeBlock {
-        if (isRequired) {
-            add(
-                "options.first·{ %S == it.name }.value.get().%L", name.toKebabCase(),
-                when {
-                    typeName.nonnull == INT -> "asLong().toInt()"
-                    typeName.nonnull == BOOLEAN -> "asBoolean()"
-                    converter != null -> CodeBlock.of("asString().let·{ %T().fromString(it) }", converter.asTypeName())
-                    isEnum -> CodeBlock.of(
-                        "asString()%L.let·{ %T.valueOf(it) }", "", typeName.nonnull
-                    )
-                    else -> "asString()"
-                }
-            )
-        } else {
-            add(
-                "options.firstOrNull·{ %S == it.name }?.value?.orElse(null)?.%L", name.toKebabCase(),
-                when {
-                    typeName.nonnull == INT -> "asLong()?.toInt()"
-                    typeName.nonnull == BOOLEAN -> "asBoolean()"
-                    converter != null -> CodeBlock.of("asString().let·{ %T().fromString(it) }", converter.asTypeName())
-                    isEnum -> CodeBlock.of(
-                        "asString()?.let·{ %T.valueOf(it) }", typeName.nonnull
-                    )
-                    else -> "asString()"
-                }
-            )
-        }
+        add(
+            if (isRequired) "options.first·{ %S == it.name }.value.get().%L" else "options.firstOrNull·{ %S == it.name }?.value?.orElse(null)?.%L",
+            (parameter.name?.asString() ?: "var$index").toKebabCase(),
+            convertValue()
+        )
     }
 }

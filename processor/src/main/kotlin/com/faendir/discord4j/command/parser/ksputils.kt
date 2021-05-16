@@ -4,7 +4,6 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.symbol.KSClassifierReference
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import kotlin.reflect.KClass
@@ -15,10 +14,7 @@ import kotlin.reflect.KProperty1
  *
  * @return false if this is not equal to annotation
  */
-private fun <T : Annotation> KSAnnotation.couldBe(annotation: KClass<T>): Boolean {
-    val classifierRef = annotationType.element as? KSClassifierReference
-    return classifierRef == null || classifierRef.referencedName() == annotation.simpleName
-}
+private fun <T : Annotation> KSAnnotation.couldBe(annotation: KClass<T>): Boolean = shortName.asString() == annotation.simpleName
 
 
 /**
@@ -33,6 +29,10 @@ inline fun <reified T : Annotation> KSAnnotated.hasAnnotation() = hasAnnotation(
 
 fun <T : Annotation> KSAnnotated.hasAnnotation(annotation: KClass<T>): Boolean {
     return annotations.filter { it.couldBe(annotation) }.any { it.isEqualTo(annotation) }
+}
+
+fun KSAnnotated.hasAnnotationWithName(vararg names: String): Boolean {
+    return annotations.any { names.contains(it.shortName.asString()) }
 }
 
 inline fun <reified T : Annotation> KSAnnotated.findAnnotation() = findAnnotation(T::class)
