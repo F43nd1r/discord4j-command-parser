@@ -7,5 +7,5 @@ import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.KSAnnotated
 
 class Processor(private val kotlinVersion: KotlinVersion, private val out: CodeGenerator, private val logger: KSPLogger) : SymbolProcessor {
-    override fun process(resolver: Resolver): List<KSAnnotated> = DslGenerator(kotlinVersion, logger, out, resolver).process()
+    override fun process(resolver: Resolver): List<KSAnnotated> = Generator(logger, out, resolver).process()
 }

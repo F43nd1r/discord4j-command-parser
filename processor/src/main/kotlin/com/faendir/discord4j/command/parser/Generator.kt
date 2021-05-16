@@ -25,15 +25,11 @@ import io.github.enjoydambience.kotlinbard.addObject
 import io.github.enjoydambience.kotlinbard.buildFile
 import net.pearx.kasechange.toKebabCase
 
-const val DEFAULTS_BITFLAGS_FIELD_NAME = "_defaultsBitFlags"
-
-class DslGenerator(
-    private val kotlinVersion: KotlinVersion,
+class Generator(
     private val logger: KSPLogger,
     private val codeGenerator: CodeGenerator,
     private val resolver: Resolver
 ) {
-    private val enumType = resolver.getClassDeclarationByName<Enum<*>>()!!.asStarProjectedType()
 
     private fun error(reason: String, clazz: KSClassDeclaration) {
         logger.error("@AutoDsl can't be applied to $clazz: $reason", clazz)

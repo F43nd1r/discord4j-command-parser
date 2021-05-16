@@ -20,11 +20,9 @@ fun KSType.asTypeName(): TypeName {
 }
 
 fun KSType.asClassName(): ClassName {
-    return ClassName(declaration.normalizedPackageName, declaration.simpleName.asString())
-}
-
-fun KSClassDeclaration.asClassName(): ClassName {
-    return ClassName(normalizedPackageName, simpleName.asString())
+    return ClassName(declaration.normalizedPackageName,
+        *generateSequence(declaration.parentDeclaration, ){ it.parentDeclaration }.map { it.simpleName.asString() }.toList().toTypedArray(),
+        declaration.simpleName.asString())
 }
 
 fun FileSpec.writeTo(source: KSFile, codeGenerator: CodeGenerator) {
@@ -41,7 +39,7 @@ fun TypeName.toRawType(): ClassName = when (this) {
     else -> throw IllegalArgumentException()
 }
 
-fun ClassName.withParserSuffix() = ClassName(packageName, "${simpleName}Parser")
+fun ClassName.withParserSuffix() = ClassName(packageName, "${simpleNames.joinToString("$")}Parser")
 
 fun TypeName.withParserSuffix() = toRawType().withParserSuffix()
 
