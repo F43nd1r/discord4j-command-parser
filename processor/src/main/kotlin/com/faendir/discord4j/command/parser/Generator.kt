@@ -69,6 +69,7 @@ class Generator(
         buildFile(parserType.packageName, parserType.simpleName) {
             addObject(parserType) {
                 addFunction("buildData") {
+                    addAnnotation(JvmStatic::class)
                     returns(dataType)
                     addCode {
                         add("return %T.builder()\n", dataType)
@@ -85,6 +86,7 @@ class Generator(
                     }
                 }
                 addFunction("parse") {
+                    addAnnotation(JvmStatic::class)
                     returns(type)
                     addParameter("options", List::class.parameterizedBy(ApplicationCommandInteractionOption::class))
                     addCode {
