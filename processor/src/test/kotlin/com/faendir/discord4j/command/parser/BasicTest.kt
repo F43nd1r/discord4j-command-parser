@@ -6,7 +6,7 @@ class BasicTest {
 
     @Test
     fun `usage`() {
-        compile(
+        compileKotlin(
             """
                 import com.faendir.discord4j.command.annotation.ApplicationCommand
                 @ApplicationCommand

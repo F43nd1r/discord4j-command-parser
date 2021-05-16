@@ -15,8 +15,10 @@ import kotlin.reflect.KProperty1
  *
  * @return false if this is not equal to annotation
  */
-private fun <T : Annotation> KSAnnotation.couldBe(annotation: KClass<T>) =
-    (annotationType.element as? KSClassifierReference)?.referencedName() == annotation.simpleName
+private fun <T : Annotation> KSAnnotation.couldBe(annotation: KClass<T>): Boolean {
+    val classifierRef = annotationType.element as? KSClassifierReference
+    return classifierRef == null || classifierRef.referencedName() == annotation.simpleName
+}
 
 
 /**
