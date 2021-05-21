@@ -33,13 +33,13 @@ publishing {
             artifact(javadocJar)
 
             pom {
-                name.set("AutoDsl KSP")
-                description.set("Auto-generates DSL for your Kotlin projects using annotations.")
-                url.set("https://github.com/F43nd1r/autodsl-ksp")
+                name.set("Discord4j Command Parser")
+                description.set("Auto-generates helper classes for your discord4j slash commands.")
+                url.set("https://github.com/F43nd1r/discord4j-command-parser")
                 scm {
-                    connection.set("scm:git:https://github.com/F43nd1r/autodsl-ksp.git")
-                    developerConnection.set("scm:git:git@github.com:F43nd1r/autodsl-ksp.git")
-                    url.set("https://github.com/F43nd1r/autodsl-ksp.git")
+                    connection.set("scm:git:https://github.com/F43nd1r/discord4j-command-parser.git")
+                    developerConnection.set("scm:git:git@github.com:F43nd1r/discord4j-command-parser.git")
+                    url.set("https://github.com/F43nd1r/discord4j-command-parser.git")
                 }
                 licenses {
                     license {
