@@ -3,6 +3,7 @@ package com.faendir.discord4j.command.parser.parameter
 import com.faendir.discord4j.command.annotation.Name
 import com.faendir.discord4j.command.parser.findAnnotationProperty
 import com.faendir.discord4j.command.parser.nonnull
+import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSValueParameter
 import com.squareup.kotlinpoet.CodeBlock
@@ -20,7 +21,7 @@ class EnumParameter(parameter: KSValueParameter, index: Int) : Parameter(paramet
         codeBlock(if (isRequired) "asString().let·{ %T.valueOf(it) }" else "asString()?.let·{ %T.valueOf(it) }", typeName.nonnull)
 
     override fun CodeBlockBuilder.modifyDataBuilder() {
-        for (enumValue in typeDeclaration.declarations.filterIsInstance<KSClassDeclaration>()) {
+        for (enumValue in typeDeclaration.declarations.filterIsInstance<KSClassDeclaration>().filter { it.classKind == ClassKind.ENUM_ENTRY }) {
             val value = enumValue.simpleName.asString()
             add(
                 ".addChoice(%T.builder().name(%S).value(%S).build())\n",
