@@ -17,6 +17,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.validate
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import discord4j.core.`object`.command.ApplicationCommandInteractionOption
+import discord4j.core.`object`.command.Interaction
 import discord4j.discordjson.json.ApplicationCommandOptionData
 import discord4j.discordjson.json.ApplicationCommandRequest
 import discord4j.rest.util.ApplicationCommandOptionType
@@ -89,8 +90,9 @@ class Generator(
                 addFunction("parse") {
                     addAnnotation(JvmStatic::class)
                     returns(type)
-                    addParameter("options", List::class.parameterizedBy(ApplicationCommandInteractionOption::class))
+                    addParameter("interaction", Interaction::class)
                     addCode {
+                        addStatement("val options = interaction.commandInteraction.options")
                         add("return %T(\n", type)
                         indent()
                         for(parameter in parameters) {

@@ -11,5 +11,5 @@ import io.github.enjoydambience.kotlinbard.codeBlock
 class CustomParameter(parameter: KSValueParameter, index: Int, private val converter: KSType) : Parameter(parameter, index) {
     override val optionType: ApplicationCommandOptionType = ApplicationCommandOptionType.STRING
 
-    override fun convertValue(): CodeBlock = codeBlock("asString().let·{ %T().fromString(it) }", converter.asTypeName())
+    override fun convertValue(): CodeBlock = codeBlock("asString().let·{ %T().fromString(interaction, it) }", converter.asTypeName())
 }

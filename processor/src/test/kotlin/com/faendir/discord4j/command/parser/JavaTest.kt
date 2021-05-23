@@ -1,19 +1,28 @@
 package com.faendir.discord4j.command.parser
 
+import com.tschuchort.compiletesting.SourceFile
 import org.junit.jupiter.api.Test
-import kotlin.test.Ignore
 
 class JavaTest {
 
-    @Ignore
     @Test
     fun `usage`() {
         compileJava(
+            SourceFile.java(
+                "Company.java",
+                """
+                public enum Company {
+                    A, B, X
+                }
+                """
+            ),
+            SourceFile.java(
+            "Sample.java",
             """
                 import com.faendir.discord4j.command.annotation.ApplicationCommand;
                 import org.jetbrains.annotations.NotNull;
                 @ApplicationCommand(name = "Sam", subCommand = true)
-                class Sample {
+                public class Sample {
                     private final String name;
                     private final int age;
                     private final Boolean male;
@@ -26,12 +35,8 @@ class JavaTest {
                         this.companyName = companyName;
                     }
                 }
-
-                enum Company{
-                    A, B, X
-                }
-            """,
-            """
+            """),
+            eval = """
                 import strikt.api.expectThat
                 import strikt.assertions.isEqualTo
                 fun test() {

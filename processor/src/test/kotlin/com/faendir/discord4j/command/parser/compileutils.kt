@@ -25,21 +25,21 @@ private fun File.collectSourceFiles(): List<SourceFile> {
 }
 
 fun compileKotlin(@Language("kotlin") source: String, @Language("kotlin") eval: String): KotlinCompilation.Result {
-    return compile(kotlin("Source.kt", source), kotlin("Eval.kt", eval))
+    return compile(listOf(kotlin("Source.kt", source)), kotlin("Eval.kt", eval))
 }
 
-fun compileJava(@Language("java") source: String, @Language("kotlin") eval: String): KotlinCompilation.Result {
-    return compile(java("Source.java", source), kotlin("Eval.kt", eval))
+fun compileJava(vararg sources: SourceFile, @Language("kotlin") eval: String): KotlinCompilation.Result {
+    return compile(sources.toList() + kotlin("Dummy.kt", ""), kotlin("Eval.kt", eval))
 }
 
 private fun compile(
-    src: SourceFile,
+    src: List<SourceFile>,
     evl: SourceFile
 ): KotlinCompilation.Result {
     val compilation = KotlinCompilation().apply {
         inheritClassPath = true
         jvmTarget = "1.8"
-        sources = listOf(src)
+        sources = src
         symbolProcessorProviders = listOf(ProcessorProvider())
     }
     val pass1 = compilation.compile()
