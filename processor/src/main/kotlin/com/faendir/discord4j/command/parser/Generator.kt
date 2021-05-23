@@ -2,9 +2,7 @@ package com.faendir.discord4j.command.parser
 
 import com.faendir.discord4j.command.annotation.ApplicationCommand
 import com.faendir.discord4j.command.annotation.ApplicationCommandConstructor
-import com.faendir.discord4j.command.parser.parameter.Parameter
 import com.faendir.discord4j.command.parser.parameter.ParameterFactory
-import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.getConstructors
 import com.google.devtools.ksp.isAbstract
 import com.google.devtools.ksp.isInternal
@@ -16,7 +14,7 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.validate
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import discord4j.core.`object`.command.ApplicationCommandInteractionOption
+import com.squareup.kotlinpoet.asClassName
 import discord4j.core.`object`.command.Interaction
 import discord4j.discordjson.json.ApplicationCommandOptionData
 import discord4j.discordjson.json.ApplicationCommandRequest
@@ -26,6 +24,7 @@ import io.github.enjoydambience.kotlinbard.addFunction
 import io.github.enjoydambience.kotlinbard.addObject
 import io.github.enjoydambience.kotlinbard.buildFile
 import net.pearx.kasechange.toKebabCase
+import reactor.core.publisher.Mono
 
 class Generator(
     private val logger: KSPLogger,
@@ -89,17 +88,30 @@ class Generator(
                 }
                 addFunction("parse") {
                     addAnnotation(JvmStatic::class)
-                    returns(type)
+                    returns(Mono::class.asClassName().parameterizedBy(type))
                     addParameter("interaction", Interaction::class)
                     addCode {
-                        addStatement("val options = interaction.commandInteraction.options")
-                        add("return %T(\n", type)
+                        add("return %T.just(interaction.commandInteraction.options).flatMap·{·options·->\n", Mono::class)
+                        indent()
+                        add("%T.zip(\n", Mono::class)
                         indent()
                         for(parameter in parameters) {
-                            add("%L, \n", parameter.passToConstructor())
+                            add("%L, \n", parameter.toMonoBlock())
                         }
                         unindent()
-                        add(")")
+                        add(")\n")
+                        unindent()
+                        add("}.map·{\n")
+                        indent()
+                        add("%T(\n", type)
+                        indent()
+                        for((index, parameter) in parameters.withIndex()) {
+                            add("it.t%L.%L,\n", index + 1, if(parameter.isRequired) "get()" else "orElse(null)")
+                        }
+                        unindent()
+                        add(")\n")
+                        unindent()
+                        add("}")
                     }
                 }
             }

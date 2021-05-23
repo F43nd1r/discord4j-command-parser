@@ -3,14 +3,11 @@ package com.faendir.discord4j.command.parser.parameter
 import com.faendir.discord4j.command.annotation.Description
 import com.faendir.discord4j.command.annotation.Name
 import com.faendir.discord4j.command.annotation.Required
-import com.faendir.discord4j.command.parser.asClassName
 import com.faendir.discord4j.command.parser.asTypeName
 import com.faendir.discord4j.command.parser.findAnnotationProperty
 import com.faendir.discord4j.command.parser.hasAnnotation
 import com.faendir.discord4j.command.parser.hasAnnotationWithName
 import com.faendir.discord4j.command.parser.isPrimitive
-import com.google.devtools.ksp.processing.KSBuiltIns
-import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSValueParameter
 import com.google.devtools.ksp.symbol.Origin
 import com.squareup.kotlinpoet.CodeBlock
@@ -19,13 +16,20 @@ import discord4j.rest.util.ApplicationCommandOptionType
 import io.github.enjoydambience.kotlinbard.CodeBlockBuilder
 import io.github.enjoydambience.kotlinbard.codeBlock
 import net.pearx.kasechange.toKebabCase
+import reactor.core.publisher.Mono
+import java.util.*
 
 abstract class Parameter(private val parameter: KSValueParameter, private val index: Int) {
     val type = parameter.type.resolve()
     val typeName = type.asTypeName()
-    val isRequired : Boolean = when (parameter.origin) {
+    val isRequired: Boolean = when (parameter.origin) {
         Origin.KOTLIN, Origin.SYNTHETIC -> !typeName.isNullable || parameter.hasAnnotation<Required>()
-        Origin.JAVA, Origin.CLASS -> typeName.isPrimitive || parameter.hasAnnotationWithName("Nonnull", "NonNull", "NotNull", "Required") && !parameter.hasAnnotationWithName("Nullable")
+        Origin.JAVA, Origin.CLASS -> typeName.isPrimitive || parameter.hasAnnotationWithName(
+            "Nonnull",
+            "NonNull",
+            "NotNull",
+            "Required"
+        ) && !parameter.hasAnnotationWithName("Nullable")
         else -> true
     }
 
@@ -49,13 +53,24 @@ abstract class Parameter(private val parameter: KSValueParameter, private val in
     open fun CodeBlockBuilder.modifyDataBuilder() {
     }
 
-    abstract fun convertValue(): CodeBlock
+    abstract fun CodeBlockBuilder.mapToOptional()
 
-    fun passToConstructor(): CodeBlock = codeBlock {
+    fun CodeBlockBuilder.mapToOptional(convertValue: CodeBlock) {
+        add(if (isRequired) ".map·{·value·-> %T.of(value.%L) }\n" else ".map·{·value·-> %T.ofNullable(value?.%L) }\n", Optional::class, convertValue)
+    }
+
+    fun toMonoBlock(): CodeBlock = codeBlock {
         add(
-            if (isRequired) "options.first·{ %S == it.name }.value.get().%L" else "options.firstOrNull·{ %S == it.name }?.value?.orElse(null)?.%L",
-            (parameter.name?.asString() ?: "var$index").toKebabCase(),
-            convertValue()
+            if (isRequired) "%T.fromCallable·{ options.first·{ %S == it.name }.value.get() }\n"
+            else "%T.fromCallable·{ options.firstOrNull·{ %S == it.name }?.value?.orElse(null) }\n",
+            Mono::class,
+            (parameter.name?.asString() ?: "var$index").toKebabCase()
         )
+        indent()
+        mapToOptional()
+        if(!isRequired) {
+            add(".switchIfEmpty(%T.just(%T.empty()))\n", Mono::class, Optional::class)
+        }
+        unindent()
     }
 }

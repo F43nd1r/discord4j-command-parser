@@ -1,6 +1,8 @@
 package com.faendir.discord4j.command.annotation
 
 import discord4j.core.`object`.command.Interaction
+import reactor.core.publisher.Mono
+import java.util.*
 import kotlin.reflect.KClass
 
 @Retention(AnnotationRetention.SOURCE)
@@ -8,5 +10,5 @@ import kotlin.reflect.KClass
 annotation class Converter(val value: KClass<out OptionConverter<*>>)
 
 interface OptionConverter<T> {
-    fun fromString(context: Interaction, string: String?): T
+    fun fromString(context: Interaction, string: String?): Mono<Optional<T>>
 }
