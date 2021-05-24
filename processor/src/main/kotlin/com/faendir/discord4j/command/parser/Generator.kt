@@ -19,6 +19,7 @@ import discord4j.core.`object`.command.Interaction
 import discord4j.discordjson.json.ApplicationCommandOptionData
 import discord4j.discordjson.json.ApplicationCommandRequest
 import discord4j.rest.util.ApplicationCommandOptionType
+import io.github.enjoydambience.kotlinbard.`while`
 import io.github.enjoydambience.kotlinbard.addCode
 import io.github.enjoydambience.kotlinbard.addFunction
 import io.github.enjoydambience.kotlinbard.addObject
@@ -91,17 +92,19 @@ class Generator(
                     returns(Mono::class.asClassName().parameterizedBy(type))
                     addParameter("interaction", Interaction::class)
                     addCode {
-                        add("return %T.just(interaction.commandInteraction.options).flatMap·{·options·->\n", Mono::class)
-                        indent()
-                        add("%T.zip(\n", Mono::class)
+                        addStatement("var options = interaction.commandInteraction.options")
+                        addStatement("var option = options.first()")
+                        `while`("option.type == %1T.SUB_COMMAND || option.type == %1T.SUB_COMMAND_GROUP", ApplicationCommandOptionType::class) {
+                            addStatement("options = option.options")
+                            addStatement("option = options.first()")
+                        }
+                        add("return %T.zip(\n", Mono::class)
                         indent()
                         for(parameter in parameters) {
                             add("%L, \n", parameter.toMonoBlock())
                         }
                         unindent()
-                        add(")\n")
-                        unindent()
-                        add("}.map·{\n")
+                        add(").map·{\n")
                         indent()
                         add("%T(\n", type)
                         indent()
