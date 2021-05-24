@@ -92,29 +92,42 @@ class Generator(
                     returns(Mono::class.asClassName().parameterizedBy(type))
                     addParameter("interaction", Interaction::class)
                     addCode {
-                        addStatement("var options = interaction.commandInteraction.options")
-                        addStatement("var option = options.first()")
-                        `while`("option.type == %1T.SUB_COMMAND || option.type == %1T.SUB_COMMAND_GROUP", ApplicationCommandOptionType::class) {
-                            addStatement("options = option.options")
-                            addStatement("option = options.first()")
+                        if (parameters.isEmpty()) {
+                            add("return Mono.just(%T())", type)
+                        } else {
+                            addStatement("var options = interaction.commandInteraction.options")
+                            addStatement("var option = options.first()")
+                            `while`("option.type == %1T.SUB_COMMAND || option.type == %1T.SUB_COMMAND_GROUP", ApplicationCommandOptionType::class) {
+                                addStatement("options = option.options")
+                                addStatement("option = options.first()")
+                            }
+                            if (parameters.size == 1) {
+                                add("return %L", parameters.first().toMonoBlock())
+                            } else {
+                                add("return %T.zip(\n", Mono::class)
+                                indent()
+                                for (parameter in parameters) {
+                                    add("%L, \n", parameter.toMonoBlock())
+                                }
+                                unindent()
+                                add(")")
+                            }
+                            add(".map·{\n")
+                            indent()
+                            add("%T(\n", type)
+                            indent()
+                            if (parameters.size == 1) {
+                                add("it.%L\n", if (parameters.first().isRequired) "get()" else "orElse(null)")
+                            } else {
+                                for ((index, parameter) in parameters.withIndex()) {
+                                    add("it.t%L.%L,\n", index + 1, if (parameter.isRequired) "get()" else "orElse(null)")
+                                }
+                            }
+                            unindent()
+                            add(")\n")
+                            unindent()
+                            add("}")
                         }
-                        add("return %T.zip(\n", Mono::class)
-                        indent()
-                        for(parameter in parameters) {
-                            add("%L, \n", parameter.toMonoBlock())
-                        }
-                        unindent()
-                        add(").map·{\n")
-                        indent()
-                        add("%T(\n", type)
-                        indent()
-                        for((index, parameter) in parameters.withIndex()) {
-                            add("it.t%L.%L,\n", index + 1, if(parameter.isRequired) "get()" else "orElse(null)")
-                        }
-                        unindent()
-                        add(")\n")
-                        unindent()
-                        add("}")
                     }
                 }
             }

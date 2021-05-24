@@ -10,6 +10,12 @@ import java.util.*
 @ApplicationCommand
 class Sample(val name: String, val age: Int, val male: Boolean?, val companyName: Company, @Converter(SuitcaseConverter::class) val suitcase: Suitcase?)
 
+@ApplicationCommand
+class Sample2()
+
+@ApplicationCommand
+class Sample3(val name: String)
+
 enum class Company {
     A, B, X
 }
