@@ -39,7 +39,7 @@ class Generator(
 
 
     fun process(): List<KSAnnotated> {
-        return resolver.getClassesWithAnnotation(ApplicationCommand::class.java.name).filterNot { generate(it) }
+        return resolver.getClassesWithAnnotation(ApplicationCommand::class.java.name).filterNot { generate(it) }.toList()
     }
 
 
@@ -51,7 +51,7 @@ class Generator(
             error("must not be abstract", clazz)
             return false
         }
-        val constructors = clazz.getConstructors().filter { it.isPublic() || it.isInternal() }
+        val constructors = clazz.getConstructors().filter { it.isPublic() || it.isInternal() }.toList()
         if (constructors.isEmpty()) {
             error("must have at least one public or internal constructor", clazz)
             return false
@@ -95,7 +95,7 @@ class Generator(
                         if (parameters.isEmpty()) {
                             add("return Mono.just(%T())", type)
                         } else {
-                            addStatement("var options = interaction.commandInteraction.options")
+                            addStatement("var options = interaction.commandInteraction.orElsesThrow{·%T(%S) }.options", IllegalArgumentException::class, "Interaction is not a command")
                             addStatement("var option = options.first()")
                             `while`("option.type == %1T.SUB_COMMAND || option.type == %1T.SUB_COMMAND_GROUP", ApplicationCommandOptionType::class) {
                                 addStatement("options = option.options")

@@ -23,8 +23,8 @@ abstract class Parameter(private val parameter: KSValueParameter, private val in
     val type = parameter.type.resolve()
     val typeName = type.asTypeName()
     val isRequired: Boolean = when (parameter.origin) {
-        Origin.KOTLIN, Origin.SYNTHETIC -> !typeName.isNullable || parameter.hasAnnotation<Required>()
-        Origin.JAVA, Origin.CLASS -> typeName.isPrimitive || parameter.hasAnnotationWithName(
+        Origin.KOTLIN, Origin.KOTLIN_LIB, Origin.SYNTHETIC -> !typeName.isNullable || parameter.hasAnnotation<Required>()
+        Origin.JAVA, Origin.JAVA_LIB -> typeName.isPrimitive || parameter.hasAnnotationWithName(
             "Nonnull",
             "NonNull",
             "NotNull",
