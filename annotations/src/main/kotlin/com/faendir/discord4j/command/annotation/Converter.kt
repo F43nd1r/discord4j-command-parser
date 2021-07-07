@@ -1,6 +1,7 @@
 package com.faendir.discord4j.command.annotation
 
 import discord4j.core.`object`.command.Interaction
+import discord4j.core.event.domain.interaction.InteractionCreateEvent
 import reactor.core.publisher.Mono
 import java.util.*
 import kotlin.reflect.KClass
@@ -10,5 +11,5 @@ import kotlin.reflect.KClass
 annotation class Converter(val value: KClass<out OptionConverter<*>>)
 
 interface OptionConverter<T> {
-    fun fromString(context: Interaction, string: String?): Mono<Optional<T>>
+    fun fromString(context: InteractionCreateEvent, string: String?): Mono<Optional<T>>
 }

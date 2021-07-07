@@ -10,6 +10,6 @@ class CustomParameter(parameter: KSValueParameter, index: Int, private val conve
     override val optionType: ApplicationCommandOptionType = ApplicationCommandOptionType.STRING
 
     override fun CodeBlockBuilder.mapToOptional() {
-        add(".flatMap·{·value·-> %T().fromString(interaction, value%L.asString()) }", converter.asTypeName(), if (isRequired) "" else "?")
+        add(".flatMap·{·value·-> %T().fromString(interactionCreateEvent, value%L.asString()) }", converter.asTypeName(), if (isRequired) "" else "?")
     }
 }
