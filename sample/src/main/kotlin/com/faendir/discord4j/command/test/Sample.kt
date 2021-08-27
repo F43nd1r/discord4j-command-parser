@@ -4,6 +4,7 @@ import com.faendir.discord4j.command.annotation.ApplicationCommand
 import com.faendir.discord4j.command.annotation.Converter
 import com.faendir.discord4j.command.annotation.OptionConverter
 import discord4j.core.`object`.command.Interaction
+import discord4j.core.event.domain.interaction.InteractionCreateEvent
 import reactor.core.publisher.Mono
 import java.util.*
 
@@ -23,7 +24,8 @@ enum class Company {
 class Suitcase(vararg val contents: String)
 
 class SuitcaseConverter : OptionConverter<Suitcase> {
-    override fun fromString(context: Interaction, string: String?): Mono<Optional<Suitcase>> {
+
+    override fun fromString(context: InteractionCreateEvent, string: String?): Mono<Optional<Suitcase>> {
         return Mono.fromCallable { Optional.ofNullable(string?.let { Suitcase(*it.split(", ").toTypedArray()) }) }
     }
 }
