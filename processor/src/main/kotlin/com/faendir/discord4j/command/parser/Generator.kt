@@ -15,8 +15,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.validate
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.asClassName
-import discord4j.core.`object`.command.Interaction
-import discord4j.core.event.domain.interaction.InteractionCreateEvent
+import discord4j.core.event.domain.interaction.SlashCommandEvent
 import discord4j.discordjson.json.ApplicationCommandOptionData
 import discord4j.discordjson.json.ApplicationCommandRequest
 import discord4j.rest.util.ApplicationCommandOptionType
@@ -91,12 +90,12 @@ class Generator(
                 addFunction("parse") {
                     addAnnotation(JvmStatic::class)
                     returns(Mono::class.asClassName().parameterizedBy(type))
-                    addParameter("interactionCreateEvent", InteractionCreateEvent::class)
+                    addParameter("event", SlashCommandEvent::class)
                     addCode {
                         if (parameters.isEmpty()) {
                             add("return Mono.just(%T())", type)
                         } else {
-                            addStatement("var options = interactionCreateEvent.interaction.commandInteraction.orElseThrow·{·%T(%S) }.options", IllegalArgumentException::class, "Interaction is not a command")
+                            addStatement("var options = event.options")
                             addStatement("var option = options.first()")
                             `while`("option.type == %1T.SUB_COMMAND || option.type == %1T.SUB_COMMAND_GROUP", ApplicationCommandOptionType::class) {
                                 addStatement("options = option.options")
