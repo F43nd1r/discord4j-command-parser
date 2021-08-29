@@ -4,8 +4,6 @@ import com.faendir.discord4j.command.annotation.ApplicationCommand
 import com.faendir.discord4j.command.annotation.Converter
 import com.faendir.discord4j.command.annotation.OptionConverter
 import discord4j.core.event.domain.interaction.SlashCommandEvent
-import reactor.core.publisher.Mono
-import java.util.*
 
 @ApplicationCommand
 class Sample(val name: String, val age: Int, val male: Boolean?, val companyName: Company, @Converter(SuitcaseConverter::class) val suitcase: Suitcase?)
@@ -24,7 +22,7 @@ class Suitcase(vararg val contents: String)
 
 class SuitcaseConverter : OptionConverter<Suitcase> {
 
-    override fun fromString(context: SlashCommandEvent, string: String?): Mono<Optional<Suitcase>> {
-        return Mono.fromCallable { Optional.ofNullable(string?.let { Suitcase(*it.split(", ").toTypedArray()) }) }
+    override fun fromString(context: SlashCommandEvent, string: String): Suitcase {
+        return Suitcase(*string.split(", ").toTypedArray())
     }
 }

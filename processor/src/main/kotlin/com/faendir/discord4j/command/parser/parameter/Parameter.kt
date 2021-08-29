@@ -53,24 +53,14 @@ abstract class Parameter(private val parameter: KSValueParameter, private val in
     open fun CodeBlockBuilder.modifyDataBuilder() {
     }
 
-    abstract fun CodeBlockBuilder.mapToOptional()
-
-    fun CodeBlockBuilder.mapToOptional(convertValue: CodeBlock) {
-        add(if (isRequired) ".map·{·value·-> %T.of(value.%L) }\n" else ".map·{·value·-> %T.ofNullable(value?.%L) }\n", Optional::class, convertValue)
-    }
+    abstract fun convertValue(): CodeBlock
 
     fun toMonoBlock(): CodeBlock = codeBlock {
         add(
-            if (isRequired) "%T.fromCallable·{ options.first·{ %S == it.name }.value.get() }\n"
-            else "%T.fromCallable·{ options.firstOrNull·{ %S == it.name }?.value?.orElse(null) }\n",
-            Mono::class,
-            (parameter.name?.asString() ?: "var$index").toKebabCase()
+            if (isRequired) "options.first·{ %S == it.name }.value.get().%L"
+            else "options.firstOrNull·{ %S == it.name }?.value?.orElse(null)?.%L",
+            (parameter.name?.asString() ?: "var$index").toKebabCase(),
+            convertValue()
         )
-        indent()
-        mapToOptional()
-        if(!isRequired) {
-            add(".switchIfEmpty(%T.just(%T.empty()))\n", Mono::class, Optional::class)
-        }
-        unindent()
     }
 }

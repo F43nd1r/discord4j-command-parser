@@ -89,11 +89,11 @@ class Generator(
                 }
                 addFunction("parse") {
                     addAnnotation(JvmStatic::class)
-                    returns(Mono::class.asClassName().parameterizedBy(type))
+                    returns(type)
                     addParameter("event", SlashCommandEvent::class)
                     addCode {
                         if (parameters.isEmpty()) {
-                            add("return Mono.just(%T())", type)
+                            add("return %T()", type)
                         } else {
                             addStatement("var options = event.options")
                             addStatement("var option = options.first()")
@@ -101,32 +101,13 @@ class Generator(
                                 addStatement("options = option.options")
                                 addStatement("option = options.first()")
                             }
-                            if (parameters.size == 1) {
-                                add("return %L", parameters.first().toMonoBlock())
-                            } else {
-                                add("return %T.zip(\n", Mono::class)
-                                indent()
+                            add("return %T(\n", type)
+                            indent()
                                 for (parameter in parameters) {
-                                    add("%L, \n", parameter.toMonoBlock())
+                                    add("%L,\n", parameter.toMonoBlock())
                                 }
-                                unindent()
-                                add(")")
-                            }
-                            add(".map·{\n")
-                            indent()
-                            add("%T(\n", type)
-                            indent()
-                            if (parameters.size == 1) {
-                                add("it.%L\n", if (parameters.first().isRequired) "get()" else "orElse(null)")
-                            } else {
-                                for ((index, parameter) in parameters.withIndex()) {
-                                    add("it.t%L.%L,\n", index + 1, if (parameter.isRequired) "get()" else "orElse(null)")
-                                }
-                            }
                             unindent()
                             add(")\n")
-                            unindent()
-                            add("}")
                         }
                     }
                 }
