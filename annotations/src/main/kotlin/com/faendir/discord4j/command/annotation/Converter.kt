@@ -1,6 +1,6 @@
 package com.faendir.discord4j.command.annotation
 
-import discord4j.core.event.domain.interaction.SlashCommandEvent
+import discord4j.core.event.domain.interaction.ChatInputInteractionEvent
 import kotlin.reflect.KClass
 
 @Retention(AnnotationRetention.SOURCE)
@@ -8,5 +8,5 @@ import kotlin.reflect.KClass
 annotation class Converter(val value: KClass<out OptionConverter<*>>)
 
 interface OptionConverter<T> {
-    fun fromString(context: SlashCommandEvent, string: String): T
+    fun fromString(context: ChatInputInteractionEvent, string: String): T
 }

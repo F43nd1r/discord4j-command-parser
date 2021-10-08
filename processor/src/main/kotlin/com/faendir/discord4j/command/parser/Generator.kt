@@ -13,19 +13,16 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.validate
-import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import com.squareup.kotlinpoet.asClassName
-import discord4j.core.event.domain.interaction.SlashCommandEvent
+import discord4j.core.`object`.command.ApplicationCommandOption
+import discord4j.core.event.domain.interaction.ChatInputInteractionEvent
 import discord4j.discordjson.json.ApplicationCommandOptionData
 import discord4j.discordjson.json.ApplicationCommandRequest
-import discord4j.rest.util.ApplicationCommandOptionType
 import io.github.enjoydambience.kotlinbard.`while`
 import io.github.enjoydambience.kotlinbard.addCode
 import io.github.enjoydambience.kotlinbard.addFunction
 import io.github.enjoydambience.kotlinbard.addObject
 import io.github.enjoydambience.kotlinbard.buildFile
 import net.pearx.kasechange.toKebabCase
-import reactor.core.publisher.Mono
 
 class Generator(
     private val logger: KSPLogger,
@@ -79,7 +76,7 @@ class Generator(
                         val name = clazz.findAnnotationProperty(ApplicationCommand::name)?.takeIf { it.isNotEmpty() } ?: type.simpleName.toKebabCase()
                         add(".name(%S)\n", name)
                         add(".description(%S)\n", clazz.findAnnotationProperty(ApplicationCommand::description)?.takeIf { it.isNotEmpty() } ?: name)
-                        if (subCommand) add(".type(%T.SUB_COMMAND.value)\n", ApplicationCommandOptionType::class)
+                        if (subCommand) add(".type(%T.Type.SUB_COMMAND.value)\n", ApplicationCommandOption::class)
                         for (parameter in parameters.sortedByDescending { it.isRequired }) {
                             add(".addOption(%L)\n", parameter.buildData())
                         }
@@ -90,14 +87,14 @@ class Generator(
                 addFunction("parse") {
                     addAnnotation(JvmStatic::class)
                     returns(type)
-                    addParameter("event", SlashCommandEvent::class)
+                    addParameter("event", ChatInputInteractionEvent::class)
                     addCode {
                         if (parameters.isEmpty()) {
                             add("return %T()", type)
                         } else {
                             addStatement("var options = event.options")
                             addStatement("var option = options.first()")
-                            `while`("option.type == %1T.SUB_COMMAND || option.type == %1T.SUB_COMMAND_GROUP", ApplicationCommandOptionType::class) {
+                            `while`("option.type == %1T.Type.SUB_COMMAND || option.type == %1T.Type.SUB_COMMAND_GROUP", ApplicationCommandOption::class) {
                                 addStatement("options = option.options")
                                 addStatement("option = options.first()")
                             }

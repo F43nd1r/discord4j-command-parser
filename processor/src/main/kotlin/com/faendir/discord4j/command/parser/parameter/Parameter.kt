@@ -7,24 +7,22 @@ import com.faendir.discord4j.command.parser.asTypeName
 import com.faendir.discord4j.command.parser.findAnnotationProperty
 import com.faendir.discord4j.command.parser.hasAnnotation
 import com.faendir.discord4j.command.parser.hasAnnotationWithName
-import com.faendir.discord4j.command.parser.isPrimitive
 import com.google.devtools.ksp.symbol.KSValueParameter
+import com.google.devtools.ksp.symbol.Nullability
 import com.google.devtools.ksp.symbol.Origin
 import com.squareup.kotlinpoet.CodeBlock
+import discord4j.core.`object`.command.ApplicationCommandOption
 import discord4j.discordjson.json.ApplicationCommandOptionData
-import discord4j.rest.util.ApplicationCommandOptionType
 import io.github.enjoydambience.kotlinbard.CodeBlockBuilder
 import io.github.enjoydambience.kotlinbard.codeBlock
 import net.pearx.kasechange.toKebabCase
-import reactor.core.publisher.Mono
-import java.util.*
 
 abstract class Parameter(private val parameter: KSValueParameter, private val index: Int) {
     val type = parameter.type.resolve()
     val typeName = type.asTypeName()
     val isRequired: Boolean = when (parameter.origin) {
         Origin.KOTLIN, Origin.KOTLIN_LIB, Origin.SYNTHETIC -> !typeName.isNullable || parameter.hasAnnotation<Required>()
-        Origin.JAVA, Origin.JAVA_LIB -> typeName.isPrimitive || parameter.hasAnnotationWithName(
+        Origin.JAVA, Origin.JAVA_LIB -> type.nullability == Nullability.NOT_NULL || parameter.hasAnnotationWithName(
             "Nonnull",
             "NonNull",
             "NotNull",
@@ -33,7 +31,7 @@ abstract class Parameter(private val parameter: KSValueParameter, private val in
         else -> true
     }
 
-    abstract val optionType: ApplicationCommandOptionType
+    abstract val optionType: ApplicationCommandOption.Type
 
     fun buildData(): CodeBlock = codeBlock {
         add("%T.builder()\n", ApplicationCommandOptionData::class)
@@ -44,7 +42,7 @@ abstract class Parameter(private val parameter: KSValueParameter, private val in
         if (isRequired) {
             add(".required(true)\n")
         }
-        add(".type(%T.%L.value)\n", ApplicationCommandOptionType::class, optionType.name)
+        add(".type(%T.Type.%L.value)\n", ApplicationCommandOption::class, optionType.name)
         modifyDataBuilder()
         add(".build()")
         unindent()

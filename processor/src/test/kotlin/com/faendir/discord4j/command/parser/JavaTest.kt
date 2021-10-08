@@ -25,10 +25,10 @@ class JavaTest {
                 public class Sample {
                     private final String name;
                     private final int age;
-                    private final Boolean male;
+                    private final boolean male;
                     private final Company companyName;
                     
-                    public Sample(@NotNull String name, int age, Boolean male, Company companyName) {
+                    public Sample(@NotNull String name, int age, boolean male, Company companyName) {
                         this.name = name;
                         this.age = age;
                         this.male = male;

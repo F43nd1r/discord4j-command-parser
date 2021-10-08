@@ -7,14 +7,14 @@ import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSValueParameter
 import com.squareup.kotlinpoet.CodeBlock
+import discord4j.core.`object`.command.ApplicationCommandOption
 import discord4j.discordjson.json.ApplicationCommandOptionChoiceData
-import discord4j.rest.util.ApplicationCommandOptionType
 import io.github.enjoydambience.kotlinbard.CodeBlockBuilder
 import io.github.enjoydambience.kotlinbard.codeBlock
 import net.pearx.kasechange.toKebabCase
 
 class EnumParameter(parameter: KSValueParameter, index: Int) : Parameter(parameter, index) {
-    override val optionType: ApplicationCommandOptionType = ApplicationCommandOptionType.STRING
+    override val optionType: ApplicationCommandOption.Type = ApplicationCommandOption.Type.STRING
     private val typeDeclaration = type.declaration as KSClassDeclaration
 
     override fun CodeBlockBuilder.modifyDataBuilder() {
@@ -29,5 +29,6 @@ class EnumParameter(parameter: KSValueParameter, index: Int) : Parameter(paramet
         }
     }
 
-    override fun convertValue(): CodeBlock = codeBlock(if (isRequired) "asString().let·{ %T.valueOf(it) }" else "asString()?.let·{ %T.valueOf(it) }", typeName.nonnull)
+    override fun convertValue(): CodeBlock =
+        codeBlock(if (isRequired) "asString().let·{ %T.valueOf(it) }" else "asString()?.let·{ %T.valueOf(it) }", typeName.nonnull)
 }
